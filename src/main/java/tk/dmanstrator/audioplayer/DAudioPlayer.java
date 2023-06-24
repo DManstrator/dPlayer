@@ -159,17 +159,13 @@ public class DAudioPlayer {
         AudioFormat audioFormat = filePackage.getAudioFormat();
         int bufferSize = filePackage.getBufferSize();
         DataLine.Info info = new DataLine.Info(Clip.class, audioFormat, bufferSize);
-        
-        if (!AudioSystem.isLineSupported(info)) {
-            throw new AudioPlayerException("DataLine Info for '" + fileName + "' is not supported.");
-        }
-        
+
         try {
-            byte[] data = filePackage.getBytes();
             //Clip clip = AudioSystem.getClip();
             Clip clip = (Clip) AudioSystem.getLine(info);
             
             //clip.open(filePackage.getAudioStream());
+            byte[] data = filePackage.getBytes();
             clip.open(audioFormat, data, 0, bufferSize);
             
             // From https://stackoverflow.com/a/40698149.
@@ -197,8 +193,8 @@ public class DAudioPlayer {
                     Thread.currentThread().interrupt();
                 }
             }
-        } catch (LineUnavailableException e) {
-            throw new AudioPlayerException("Cannot play audio for '" + fileName + "'.");
+        } catch (Exception e) {
+            throw new AudioPlayerException("Cannot play audio for '" + fileName + "'.", e);
         }
     }
     
