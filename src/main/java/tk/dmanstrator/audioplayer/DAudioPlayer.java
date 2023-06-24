@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
@@ -19,6 +20,10 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.Line.Info;
+import javax.sound.sampled.spi.MixerProvider;
+
+import com.sun.media.sound.JDK13Services;
+
 import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
@@ -163,8 +168,12 @@ public class DAudioPlayer {
         DataLine.Info info = new DataLine.Info(Clip.class, audioFormat, bufferSize);
 
         try {
+            List<?> providers = JDK13Services.getProviders(MixerProvider.class);
+            System.out.println("Available Mixers: " + providers.size());
+            System.out.println(providers);
+
             Info[] sourceLineInfo = AudioSystem.getSourceLineInfo(info);
-            System.out.println("Source Line Info: " + sourceLineInfo.length);
+            System.out.println("Source Line Info Objects: " + sourceLineInfo.length);
             for (Info i : sourceLineInfo)  {
                 DataLine.Info dI = (DataLine.Info) i;
                 AudioFormat[] formats = dI.getFormats();
@@ -176,7 +185,7 @@ public class DAudioPlayer {
             }
 
             Info[] targetLineInfo = AudioSystem.getTargetLineInfo(info);
-            System.out.println("Target Line Info: " + targetLineInfo.length);
+            System.out.println("Target Line Info Objects: " + targetLineInfo.length);
             
             Clip clip = AudioSystem.getClip();
             //Clip clip = (Clip) AudioSystem.getLine(info);
