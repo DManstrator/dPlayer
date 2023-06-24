@@ -14,10 +14,8 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.DataLine;
 import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineEvent;
-import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 /**
@@ -158,15 +156,12 @@ public class DAudioPlayer {
         
         AudioFormat audioFormat = filePackage.getAudioFormat();
         int bufferSize = filePackage.getBufferSize();
-        DataLine.Info info = new DataLine.Info(Clip.class, audioFormat, bufferSize);
 
         try {
-            //Clip clip = AudioSystem.getClip();
-            Clip clip = (Clip) AudioSystem.getLine(info);
+            Clip clip = AudioSystem.getClip();
+            //Clip clip = (Clip) AudioSystem.getLine(info);
             
-            //clip.open(filePackage.getAudioStream());
-            byte[] data = filePackage.getBytes();
-            clip.open(audioFormat, data, 0, bufferSize);
+            clip.open(audioFormat, filePackage.getBytes(), 0, bufferSize);
             
             // From https://stackoverflow.com/a/40698149.
             if (volume < 0f || volume > 1f)  {
