@@ -168,10 +168,6 @@ public class DAudioPlayer {
         DataLine.Info info = new DataLine.Info(Clip.class, audioFormat, bufferSize);
 
         try {
-            List<?> providers = JDK13Services.getProviders(MixerProvider.class);
-            System.out.println("Available Mixers: " + providers.size());
-            System.out.println(providers);
-
             Info[] sourceLineInfo = AudioSystem.getSourceLineInfo(info);
             System.out.println("Source Line Info Objects: " + sourceLineInfo.length);
             for (Info i : sourceLineInfo)  {
