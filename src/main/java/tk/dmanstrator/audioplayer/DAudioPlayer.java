@@ -164,6 +164,7 @@ public class DAudioPlayer {
 
         try {
             Info[] sourceLineInfo = AudioSystem.getSourceLineInfo(info);
+            System.out.println("Source Line Info: " + sourceLineInfo.length);
             for (Info i : sourceLineInfo)  {
                 DataLine.Info dI = (DataLine.Info) i;
                 AudioFormat[] formats = dI.getFormats();
@@ -174,6 +175,9 @@ public class DAudioPlayer {
                 System.out.println();
             }
 
+            Info[] targetLineInfo = AudioSystem.getTargetLineInfo(info);
+            System.out.println("Target Line Info: " + targetLineInfo.length);
+            
             Clip clip = AudioSystem.getClip();
             //Clip clip = (Clip) AudioSystem.getLine(info);
             
