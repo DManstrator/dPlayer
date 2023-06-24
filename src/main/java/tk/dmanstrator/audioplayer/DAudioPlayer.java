@@ -19,12 +19,16 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.Line;
 import javax.sound.sampled.Line.Info;
 import javax.sound.sampled.spi.MixerProvider;
 
 import com.sun.media.sound.JDK13Services;
 
 import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.Mixer;
+import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 /**
@@ -171,22 +175,36 @@ public class DAudioPlayer {
             List<?> providers = JDK13Services.getProviders(MixerProvider.class);
             System.out.println("Available Mixers: " + providers.size());
             System.out.println(providers);
+            System.out.println();
 
-            Info[] sourceLineInfo = AudioSystem.getSourceLineInfo(info);
-            System.out.println("Source Line Info Objects: " + sourceLineInfo.length);
-            for (Info i : sourceLineInfo)  {
-                DataLine.Info dI = (DataLine.Info) i;
-                AudioFormat[] formats = dI.getFormats();
-                System.out.println(dI.toString());
-                for (AudioFormat format : formats)  {
-                    System.out.println(format);
+            // 2: if that doesn't work, try to find any mixing mixer
+            for(int i = 0; i < providers.size(); i++) {
+                MixerProvider provider = (MixerProvider) providers.get(i);
+                System.out.println("Provider: " + provider);
+
+                Mixer.Info[] infos = provider.getMixerInfo();
+
+                System.out.println("Mixer Infos: " + infos.length);
+                for (int j = 0; j < infos.length; j++) {
+                    try {
+                        Mixer.Info mixerInfo = infos[j];
+                        System.out.println("Mixer Info: " + mixerInfo);
+                        Mixer mixer = provider.getMixer(mixerInfo);
+                        // see if this is an appropriate mixer which can mix
+                        if (isAppropriateMixer(mixer, info, false)) {
+                            System.out.println("Appropiat mixer: " + mixerInfo);
+                            mixer.getLine(info);
+                        }
+                    } catch (LineUnavailableException | IllegalArgumentException iae) {
+                        // must not happen... but better to catch it here,
+                        // if plug-ins are badly written
+                    }
                 }
                 System.out.println();
             }
 
             Info[] targetLineInfo = AudioSystem.getTargetLineInfo(info);
-            System.out.println("Target Line Info Objects: " + targetLineInfo.length);
-            
+
             Clip clip = AudioSystem.getClip();
             //Clip clip = (Clip) AudioSystem.getLine(info);
             
@@ -241,6 +259,18 @@ public class DAudioPlayer {
             String errorMsg = String.format("Failed to read the existing audio file at '%s'.", fileName);
             throw new AudioPlayerException(errorMsg, e);
         }
+    }
+
+    private static boolean isAppropriateMixer(Mixer mixer, Line.Info lineInfo, boolean isMixingRequired) {
+        if (! mixer.isLineSupported(lineInfo)) {
+            return false;
+        }
+        Class lineClass = lineInfo.getLineClass();
+        if (isMixingRequired && (SourceDataLine.class.isAssignableFrom(lineClass) ||  Clip.class.isAssignableFrom(lineClass))) {
+            int maxLines = mixer.getMaxLines(lineInfo);
+            return ((maxLines == -1) || (maxLines > 1));
+        }
+        return true;
     }
 
 }
