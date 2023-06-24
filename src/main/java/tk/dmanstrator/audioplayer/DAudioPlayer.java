@@ -6,7 +6,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
@@ -14,7 +16,9 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
 import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.Line.Info;
 import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
@@ -156,8 +160,20 @@ public class DAudioPlayer {
         
         AudioFormat audioFormat = filePackage.getAudioFormat();
         int bufferSize = filePackage.getBufferSize();
+        DataLine.Info info = new DataLine.Info(Clip.class, audioFormat, bufferSize);
 
         try {
+            Info[] sourceLineInfo = AudioSystem.getSourceLineInfo(info);
+            for (Info i : sourceLineInfo)  {
+                DataLine.Info dI = (DataLine.Info) i;
+                AudioFormat[] formats = dI.getFormats();
+                System.out.println(dI.toString());
+                for (AudioFormat format : formats)  {
+                    System.out.println(format);
+                }
+                System.out.println();
+            }
+
             Clip clip = AudioSystem.getClip();
             //Clip clip = (Clip) AudioSystem.getLine(info);
             
