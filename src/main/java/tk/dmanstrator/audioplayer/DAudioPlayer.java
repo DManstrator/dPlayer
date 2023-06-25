@@ -14,10 +14,9 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.DataLine;
 import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineEvent;
-import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.Mixer.Info;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 /**
@@ -153,24 +152,21 @@ public class DAudioPlayer {
                                  float volume, boolean waitUntilFinish) {
         checkWaveFile(fileName);
         
+        Info[] availableMixers = AudioSystem.getMixerInfo();
+        if (availableMixers.length == 0)  {
+            throw new AudioPlayerException("The system has no mixers, thus no audio can be played.");
+        }
+
         FilePackage filePackage = PATH_PACKAGE_MAP.computeIfAbsent(fileName,
                                                                    key -> getDataFromStream(is, key));
         
         AudioFormat audioFormat = filePackage.getAudioFormat();
         int bufferSize = filePackage.getBufferSize();
-        DataLine.Info info = new DataLine.Info(Clip.class, audioFormat, bufferSize);
-        
-        if (!AudioSystem.isLineSupported(info)) {
-            throw new AudioPlayerException("DataLine Info for '" + fileName + "' is not supported.");
-        }
-        
+
         try {
-            byte[] data = filePackage.getBytes();
-            //Clip clip = AudioSystem.getClip();
-            Clip clip = (Clip) AudioSystem.getLine(info);
+            Clip clip = AudioSystem.getClip();
             
-            //clip.open(filePackage.getAudioStream());
-            clip.open(audioFormat, data, 0, bufferSize);
+            clip.open(audioFormat, filePackage.getBytes(), 0, bufferSize);
             
             // From https://stackoverflow.com/a/40698149.
             if (volume < 0f || volume > 1f)  {
@@ -197,8 +193,8 @@ public class DAudioPlayer {
                     Thread.currentThread().interrupt();
                 }
             }
-        } catch (LineUnavailableException e) {
-            throw new AudioPlayerException("Cannot play audio for '" + fileName + "'.");
+        } catch (Exception e) {
+            throw new AudioPlayerException("Cannot play audio for '" + fileName + "'.", e);
         }
     }
     
