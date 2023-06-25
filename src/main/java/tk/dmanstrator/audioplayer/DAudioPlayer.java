@@ -15,8 +15,8 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
-
 import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.Mixer.Info;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 /**
@@ -152,6 +152,11 @@ public class DAudioPlayer {
                                  float volume, boolean waitUntilFinish) {
         checkWaveFile(fileName);
         
+        Info[] availableMixers = AudioSystem.getMixerInfo();
+        if (availableMixers.length == 0)  {
+            throw new AudioPlayerException("The system has no mixers, thus no audio can be played.");
+        }
+
         FilePackage filePackage = PATH_PACKAGE_MAP.computeIfAbsent(fileName,
                                                                    key -> getDataFromStream(is, key));
         
